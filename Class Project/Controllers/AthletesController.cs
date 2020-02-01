@@ -18,13 +18,12 @@ namespace Class_Project.Views
         [HttpGet]
         public ActionResult HomePage(string SearchQ)
         {
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-            var athletes = db.Athletes.Include(a => a.Team);
-            return View(athletes.ToList());
-        }
-
-=======
+            //Okay so to fix a merge conflict you open the file where the conflict is
+            //and you'll see something like 
+            //those are letting you know where the conflicts are. 
+            //now you go through the code and edit it where you see fit
+            //Because I didn't edit these files, I dont' need to worry about keeping
+            //my code because it doesn't affect what I personally did
             var name = db.Athletes.Where(s => s.Name.Contains(SearchQ)).ToList();
 
             if (name == null)
@@ -43,29 +42,6 @@ namespace Class_Project.Views
             return View(athletes.ToList());
         }
 
->>>>>>> Stashed changes
-=======
-            var name = db.Athletes.Where(s => s.Name.Contains(SearchQ));
-
-            if (name == null)
-            {
-                return View("Item Not found!");
-            }
-
-            return View(name);
-        }
-
-
-
-            // GET: Athletes
-
-            public ActionResult Index()
-            {
-                var athletes = db.Athletes.Include(a => a.Team);
-                return View(athletes.ToList());
-            }
-
->>>>>>> 8e5d926b7dd83c0e3341575e0b7ad3d6f9bf0693
         // GET: Athletes/Details/5
         public ActionResult Details(int? id)
         {
