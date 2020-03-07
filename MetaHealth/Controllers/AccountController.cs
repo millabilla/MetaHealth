@@ -10,17 +10,20 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using MetaHealth.Models;
 using Calendar.ASP.NET.MVC5;
+using MetaHealth.DAL;
 
 namespace MetaHealth.Controllers
 {
     [Authorize]
     public class AccountController : Controller
     {
+        
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
         public AccountController()
         {
+            ApplicationUser currentUser = UserManager.FindById(User.Identity.GetUserId());
         }
 
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
@@ -168,7 +171,10 @@ namespace MetaHealth.Controllers
                     // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
                     // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
                     // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
-
+                    ApplicationDbContext db = new ApplicationDbContext();
+                    MoodsInBetween moods = new MoodsInBetween { FK_UserTable = user.Id };
+                    db.MoodsInBetweens.Add(moods);
+                    db.SaveChanges();
                     return RedirectToAction("Index", "Home");
                 }
                 AddErrors(result);
