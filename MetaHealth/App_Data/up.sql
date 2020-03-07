@@ -1,62 +1,54 @@
-﻿CREATE TABLE [dbo].[MoodsInBetween]
+﻿CREATE TABLE [dbo].[HelpAlongUser]
 (
-    [PK]   INT IDENTITY(1,1) NOT NULL,
-    [FK_UserTable] NVARCHAR (128) NOT NULL,
-    CONSTRAINT [PK_dbo.MoodsInBetween] PRIMARY KEY CLUSTERED ([PK] ASC),
-    CONSTRAINT [FK_dbo.MoodsInBetween_dbo.AspNetUsers_UserId] FOREIGN KEY ([FK_UserTable]) REFERENCES [dbo].[AspNetUsers] ([Id])
-
+[PK] INT IDENTITY(1,1) NOT NULL,
+[UserName] NVARCHAR (128) NOT NULL,
+[IdentityID] NVARCHAR(128) NOT NULL,
+CONSTRAINT [PK_dbo.HelpAlongUser] PRIMARY KEY CLUSTERED ([PK] ASC),
+CONSTRAINT [FK_dbo.HelpAlongUser_dbo.AspNetUsers_Id] FOREIGN KEY ([IdentityID])
+	REFERENCES [dbo].[AspNetUsers] ([Id])
 );
 
 CREATE TABLE [dbo].[Moods]
 (
-    [PK]   INT IDENTITY(1,1) NOT NULL,
-    [FK_MoodsInBetween] INT NOT NULL,
+    [PK] INT IDENTITY(1,1) NOT NULL,
+    [UserNum] INT NOT NULL,
     [MoodNum] INT NOT NULL,
-    [Date] DATETIME NOT NULL,
+    [Date] DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	CONSTRAINT CHK_MoodNum CHECK (MoodNum > 0 AND MoodNum <=5),
     CONSTRAINT [PK_dbo.Moods] PRIMARY KEY CLUSTERED ([PK] ASC),
-    CONSTRAINT [FK_dbo.Moods_dbo.MoodsInBetween] FOREIGN KEY ([FK_MoodsInBetween]) REFERENCES [dbo].[MoodsInBetween] ([PK])
-
-);
-
-CREATE TABLE [dbo].[List]
-(
-    [PK]   INT IDENTITY(1,1) NOT NULL,
-    [FK_UserTable] NVARCHAR (128) NOT NULL,
-    CONSTRAINT [PK_dbo.List] PRIMARY KEY CLUSTERED ([PK] ASC),
-    CONSTRAINT [FK_dbo.List_dbo.AspNetUsers_UserId] FOREIGN KEY ([FK_UserTable]) REFERENCES [dbo].[AspNetUsers] ([Id])
-
+    CONSTRAINT [FK_dbo.Moods_dbo.HelpAlongUser_PK] FOREIGN KEY ([UserNum]) REFERENCES [dbo].[HelpAlongUser] ([PK])
 );
 
 CREATE TABLE [dbo].[CustomLevel]
 (
     [PK]   INT IDENTITY(1,1) NOT NULL,
-    [FK_List] INT NOT NULL,
+    [UserNum] INT NOT NULL,
     [Task] NVARCHAR (256) NOT NULL,
     CONSTRAINT [PK_dbo.CustomLevel] PRIMARY KEY CLUSTERED ([PK] ASC),
-    CONSTRAINT [FK_dbo.CustomLevel_dbo.List] FOREIGN KEY ([FK_List]) REFERENCES [dbo].[List] ([PK])
+    CONSTRAINT [FK_dbo.CustomLevel_dbo.HelpAlongUser_PK] FOREIGN KEY ([UserNum]) REFERENCES [dbo].[HelpAlongUser] ([PK])
 
 );
 
 CREATE TABLE [dbo].[ToDoList]
 (
     [PK]   INT IDENTITY(1,1) NOT NULL,
-    [FK_List] INT NOT NULL,
+    [UserNum] INT NOT NULL,
     [Task] NVARCHAR (256) NOT NULL,
     [Checked] BIT NOT NULL,
     CONSTRAINT [PK_dbo.ToDoList] PRIMARY KEY CLUSTERED ([PK] ASC),
-    CONSTRAINT [FK_dbo.ToDoList_dbo.List] FOREIGN KEY ([FK_List]) REFERENCES [dbo].[List] ([PK])
+    CONSTRAINT [FK_dbo.ToDoList_dbo.HelpAlongUser_PK] FOREIGN KEY ([UserNum]) REFERENCES [dbo].[HelpAlongUser] ([PK])
 
 );
 
 CREATE TABLE [dbo].[APIToDoList]
 (
     [PK]   INT IDENTITY(1,1) NOT NULL,
-    [FK_List] INT NOT NULL,
+    [UserNum] INT NOT NULL,
     [CalandarID] NVARCHAR (256) NOT NULL,
     [EventID] NVARCHAR (256) NOT NULL,
     [Checked] BIT NOT NULL,
     CONSTRAINT [PK_dbo.APIToDoList] PRIMARY KEY CLUSTERED ([PK] ASC),
-    CONSTRAINT [FK_dbo.APIToDoList_dbo.List] FOREIGN KEY ([FK_List]) REFERENCES [dbo].[List] ([PK])
+    CONSTRAINT [FK_dbo.APIToDoList_dbo.HelpAlongUser_PK] FOREIGN KEY ([UserNum]) REFERENCES [dbo].[HelpAlongUser] ([PK])
 
 );
 
