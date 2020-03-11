@@ -6,7 +6,8 @@ namespace MetaHealth {
 
     public partial class HelpAlongDB : DbContext {
         public HelpAlongDB()
-            : base("name=HelpAlong") {
+            //: base("name=HelpAlong") {
+            : base("name=helpalong") { 
         }
 
         public virtual DbSet<APIToDoList> APIToDoLists { get; set; }
