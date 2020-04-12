@@ -253,6 +253,9 @@
             @Scripts.Render("~/Scripts/SelfCareSuggestion.js")
             <script>
                 window.onload=function() {
+                    if(@Model.MoodDictionary.Count()==0) {
+                        return;
+                    }
                     var chart=new CanvasJS.Chart("moodgraph",{
                         backgroundColor: null,
                         axisX: {
