@@ -18,43 +18,47 @@ namespace MetaHealth.Controllers
             return View();
         }
 
+        public ActionResult HowToOpen()
+        {
+            return View();
+        }
+
+        public ActionResult BreathingSpace()
+        {
+            return View();
+        }
+
         public ActionResult gitHubResources()
         {
-            return View(); 
+            return View();
         }
 
         public ActionResult Resources()
         {
-            return View(); 
-        }
-
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your application description page.";
-
             return View();
         }
 
         public ActionResult Contact()
         {
-            ViewBag.Message = "Your contact page.";
+            ViewBag.Message = "Contact page.";
 
             return View();
         }
 
-        public ActionResult FlowchartCheck() 
+        public ActionResult FlowchartCheck()
         {
             return View();
         }
 
-        public ActionResult Flowchart() 
+        public ActionResult Flowchart()
         {
             return View();
         }
+
         public ActionResult Venting()
+
         {
             return View();
         }
-
     }
 }

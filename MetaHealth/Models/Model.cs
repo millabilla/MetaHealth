@@ -1,6 +1,5 @@
 namespace MetaHealth.Models
 {
-    using System;
     using System.Data.Entity;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
@@ -11,10 +10,11 @@ namespace MetaHealth.Models
 
     public partial class Model : DbContext
     {
-        public Model()
-            //: base("HelpAlong")
-            :base("helpalong")
-        {
+        public Model() 
+        : base("AzureDB")
+        //: base("DefaultConnection")
+        // : base("HelpAlong")
+        { 
         }
 
         public virtual DbSet<SepMood> SepMoods { get; set; }

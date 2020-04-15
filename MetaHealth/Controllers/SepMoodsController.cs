@@ -4,8 +4,8 @@ using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
+using System.Windows;
 using MetaHealth.Models;
 using Microsoft.AspNet.Identity;
 
@@ -19,8 +19,9 @@ namespace MetaHealth.Controllers
         public ActionResult Index()
         {
             var userId = User.Identity.GetUserId();
+            List<SepMood> sepMoods = db.SepMoods.Where(x => x.UserID == userId).OrderByDescending(y => y.Date).ToList();
 
-            return View(db.SepMoods.Where(x => x.UserID == userId));
+            return View(sepMoods);
         }
 
         // GET: SepMoods/Details/5
@@ -49,7 +50,7 @@ namespace MetaHealth.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "PK,UserID,MoodNum,Date")] SepMood sepMood)
+        public ActionResult Create([Bind(Include = "PK,UserID,MoodNum,Date,Reason")] SepMood sepMood)
         {
             sepMood.UserID = User.Identity.GetUserId();
             sepMood.Date = DateTime.Now;
@@ -62,7 +63,8 @@ namespace MetaHealth.Controllers
             {
                 db.SepMoods.Add(sepMood);
                 db.SaveChanges();
-                return RedirectToAction("Index");
+                //MessageBox.Show("Your mood was added successfully", "Complete!" );
+                return RedirectToAction("UpcomingEvents", "Calendar");
             }
 
             return View(sepMood);
@@ -88,8 +90,9 @@ namespace MetaHealth.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "PK,UserID,MoodNum,Date")] SepMood sepMood)
+        public ActionResult Edit([Bind(Include = "PK,UserID,MoodNum,Date,Reason")] SepMood sepMood)
         {
+            sepMood.UserID = User.Identity.GetUserId();
             if (ModelState.IsValid)
             {
                 db.Entry(sepMood).State = EntityState.Modified;
@@ -132,6 +135,66 @@ namespace MetaHealth.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        //This function assumes that you've already grabbed the mood data for the currently logged in user
+        public double AverageDailyMood(List<SepMood> userMoods, DateTime dateWanted)
+        {
+            double sumMood = 0;
+            int entryCounter = 0;
+            foreach (SepMood entry in userMoods)
+            {
+                if (entry.Date == dateWanted)
+                {
+                    sumMood += entry.MoodNum;
+                    entryCounter++;
+                }
+            }
+            return sumMood / entryCounter;
+        }
+
+        //overload that assumes list has already been filtered for correct date
+        public double AverageDailyMood(List<SepMood> userMoods)
+        {
+            double sumMood = 0;
+            int entryCounter = 0;
+            foreach (SepMood entry in userMoods)
+            {
+                sumMood += entry.MoodNum;
+                entryCounter++;
+            }
+            return sumMood / entryCounter;
+        }
+
+        public double AverageDailyMood(List<int> userMoods)
+        {
+            double sumMood = 0;
+            int entryCounter = 0;
+            foreach (int entry in userMoods)
+            {
+                sumMood += entry;
+                entryCounter++;
+            }
+            return sumMood / entryCounter;
+        }
+
+        public List<int> GetMoodsByDate(DateTime dateWanted)
+        {
+            var retVal = db.SepMoods.Where(d => d.Date == dateWanted).Select(m => m.MoodNum).ToList();
+            return retVal;
+        }
+
+        public List<int> GetMoodsByDate(List<SepMood> sepMoods, DateTime dateWanted)
+        {
+            var retVal = new List<int>();
+            foreach (var item in sepMoods)
+            {
+                if (item.Date.Date == dateWanted)
+                {
+                    retVal.Add(item.MoodNum);
+                }
+            }
+            return retVal;
         }
     }
 }
