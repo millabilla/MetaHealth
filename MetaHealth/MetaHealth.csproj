@@ -244,7 +244,11 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\BreathingSpace.css" />
     <Content Include="Content\Flowchart.css" />
+<<<<<<< HEAD
     <Content Include="Content\Search.css" />
+=======
+    <Content Include="Content\resources.css" />
+>>>>>>> develop
     <Content Include="Content\SelfCareQuiz.css" />
     <Content Include="credentials.json" />
     <Content Include="favicon.ico" />
@@ -312,7 +316,6 @@
     <Content Include="Views\Home\FlowchartCheck.cshtml" />
     <Content Include="Views\Home\Flowchart.cshtml" />
     <Content Include="Views\Calendar\UpcomingEvents.cshtml" />
-    <Content Include="Views\Home\Venting.cshtml" />
     <Content Include="Views\Home\SelfCareQuiz.cshtml" />
     <Content Include="Views\SepMoods\Create.cshtml" />
     <Content Include="Views\SepMoods\Delete.cshtml" />
@@ -327,6 +330,7 @@
     <Content Include="Views\CustomLists\Edit.cshtml" />
     <Content Include="Views\CustomLists\Index.cshtml" />
     <Content Include="Views\Search\SearchPage.cshtml" />
+    <Content Include="Views\Home\Venting.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
