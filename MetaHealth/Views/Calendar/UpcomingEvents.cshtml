@@ -26,7 +26,7 @@
         <a href="~/DAL/Model.cs"></a>
         @*First row of content. This includes (from left to right) mood graph and space for daily self care suggestion*@
         <div class="row" id="homePageRow1">
-            @if (Model.MoodDictionary.Count != 0)
+            @if (Model.MoodDictionaryAvg.Count != 0)
             {
                 @*Spot for mood graph*@
                 <div class="col-lg-5" style="height:370px; margin-left: 35px ;  background-color: #eeebdd ; border:5px solid #F0C032 ; border-radius: 25px" id="moodgraph">
@@ -359,6 +359,21 @@ duration.Value.Minutes >= 2 ? "s" : "")
         @Scripts.Render("https://canvasjs.com/assets/script/canvasjs.min.js");
         @Scripts.Render("~/Scripts/SelfCareSuggestion.js")
         <script>
+            var listKeys=[];
+            var listVals=[];
+          //@sepmoods has a getmoodsbydate(datetime param) function... 
+            //pass this into the model
+            //parse it in html
+            //add on content hover
+            
+            function buildDisplayString(params) {
+                retVal="";
+                for(var key in params) {
+                    retVal+="test";
+                }
+              
+                return retVal;
+            }
                 window.onload=function() {
                     var chart=new CanvasJS.Chart("moodgraph",{
                         backgroundColor: null,
@@ -377,16 +392,19 @@ duration.Value.Minutes >= 2 ? "s" : "")
                         },
                         toolTip: {
                             shared: true,
-                            content:"Avg mood for {label}"
+                            //content:"Avg mood for {label}"
+                            content: buildDisplayString(listKeys)
                         },
                         data: [{
                             type: "line",
                             lineColor: "#EE8535",
-                            dataPoints: [@Html.Raw(String.Join(",",Model.MoodDictionary.Select(x=> "{y:"+x.Value+",label:\""+x.Key+"\", color: \"#EE8535\"}")))]
+                            dataPoints: [@Html.Raw(String.Join(",",Model.MoodDictionaryAvg.Select(x=> "{y:"+x.Value+",label:\""+x.Key+"\", color: \"#EE8535\"}")))]
+                            
                         }],
 
                     });
                     chart.render();
-                }
+            }
+            
         </script>
     }

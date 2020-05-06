@@ -220,5 +220,18 @@ namespace MetaHealth.Controllers
             }
             return retVal;
         }
+
+        public Dictionary<string,List<double>> GetAllMoodsByDate() {
+            var userId = User.Identity.GetUserId();
+            Dictionary<string, List<double>> retVal = new Dictionary<string, List<double>>();
+            List<string> listDates = db.SepMoods.Where(x => x.UserID == userId).Select(y => y.Date).Cast<string>().ToList();
+            
+            List<int> listMoodNums = db.SepMoods.Where(x => x.UserID == userId).Select(y => y.MoodNum).ToList();
+            foreach(var date in listDates) {
+                retVal.Add(date, )
+            }
+            db.SepMoods.Select(x => x.MoodNum);
+            return retVal;
+        }
     }
 }
