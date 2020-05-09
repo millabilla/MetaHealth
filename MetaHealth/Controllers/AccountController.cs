@@ -1,7 +1,4 @@
-﻿using System;
-using System.Globalization;
-using System.Linq;
-using System.Security.Claims;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -10,6 +7,7 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using MetaHealth.Models;
 using Calendar.ASP.NET.MVC5;
+using MetaHealth.DAL;
 
 namespace MetaHealth.Controllers
 {
@@ -367,6 +365,8 @@ namespace MetaHealth.Controllers
             {
                 return RedirectToAction("Index", "Manage");
             }
+            string[] nameArr = model.Email.Split('@');
+            model.UserName = nameArr[0];
 
             if (ModelState.IsValid)
             {
@@ -376,7 +376,7 @@ namespace MetaHealth.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.UserName, Email = model.Email };
                 var result = await UserManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
@@ -384,7 +384,7 @@ namespace MetaHealth.Controllers
                     if (result.Succeeded)
                     {
                         await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
-                        return RedirectToLocal(returnUrl);
+                        return RedirectToAction("Edit", "AspNetUsers");
                     }
                 }
                 AddErrors(result);

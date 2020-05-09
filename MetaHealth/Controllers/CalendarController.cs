@@ -16,13 +16,11 @@ using Google.Apis.Util.Store;
 using Google.Apis.Tasks.v1;
 using Google.Apis.Tasks.v1.Data;
 using Task = System.Threading.Tasks.Task;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using System.Threading;
-using MetaHealth;
-using MetaHealth.Models;
 using System.Data.Entity;
 using MetaHealth.Controllers;
+using MetaHealth.DAL;
+using MetaHealth.Models;
 
 namespace Calendar.ASP.NET.MVC5.Controllers
 {
@@ -31,6 +29,8 @@ namespace Calendar.ASP.NET.MVC5.Controllers
     {
         private readonly IDataStore dataStore = new FileDataStore(GoogleWebAuthorizationBroker.Folder);
         private Model db = new Model();
+
+        #region GetCredentialForApiAsync
 
         private async Task<UserCredential> GetCredentialForApiAsync()
         {
@@ -53,7 +53,13 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             return new UserCredential(flow, userId, token);
         }
 
-        // GET: /Calendar/UpcomingEvents
+        #endregion GetCredentialForApiAsync
+
+        //loads the entire dashboard
+
+        #region UpcomingEvents()
+
+        // GET: For the Home Page
         public async Task<ActionResult> UpcomingEvents()
         {
             Dictionary<string, double> dummyDict = new Dictionary<string, double>();
@@ -213,8 +219,24 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             }
             else ViewBag.NoEvents = eventsOrNo;
 
+            //Custom List
+            var userId = User.Identity.GetUserId();
+            model.CustomTask = db.CustomLists.Where(x => x.UserID == userId).Select(x => x.TaskTitle).ToArray();
+            model.id = db.CustomLists.Where(x => x.UserID == userId).Select(x => x.UserID).ToArray();
+            model.PK = db.CustomLists.Where(x => x.UserID == userId).Select(x => x.PK).ToArray();
+
+            //JS for opening calendar
+            model.EventsOrNah = await AmountOfEvents();
+            model.UserName = db.AspNetUsers.Where(x => x.Id == userId).Select(x => x.UserName).FirstOrDefault();
+
             return View(model);
         }
+
+        #endregion UpcomingEvents()
+
+        //Marks OFf Tasks Through Ajax
+
+        #region MarkDownTask()
 
         [HttpGet]
         public async Task<ActionResult> MarkDownTask()
@@ -290,6 +312,12 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             return Content(json);
         }
 
+        #endregion MarkDownTask()
+
+        //Adding a new Task
+
+        #region UpcomingEvents()
+
         [HttpPost]
         public async Task<ActionResult> UpcomingEvents(string taskTitle)
         {
@@ -316,6 +344,11 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             return View(model);
         }
 
+        #endregion UpcomingEvents()
+
+        #region Adding Premade Tasks
+
+        //Adding premade task Level One
         [HttpPost]
         public async Task<ActionResult> AddPreMadeOne()
         {
@@ -343,6 +376,7 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             return View("UpcomingEvents", model);
         }
 
+        //Adding premade task Level Two
         [HttpPost]
         public async Task<ActionResult> AddPreMadeTwo()
         {
@@ -373,6 +407,7 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             return View("UpcomingEvents", model);
         }
 
+        //Adding premade task Level Three
         [HttpPost]
         public async Task<ActionResult> AddPreMadeThree()
         {
@@ -402,6 +437,12 @@ namespace Calendar.ASP.NET.MVC5.Controllers
 
             return View("UpcomingEvents", model);
         }
+
+        #endregion Adding Premade Tasks
+
+        // Model for the page
+
+        #region GetCurrentEventsTask()
 
         public async Task<UpcomingEventsViewModel> GetCurrentEventsTask()
         {
@@ -562,12 +603,31 @@ namespace Calendar.ASP.NET.MVC5.Controllers
 
             #endregion Populate data for graph
 
+            var userId = User.Identity.GetUserId();
+            model.CustomTask = db.CustomLists.Where(x => x.UserID == userId).Select(x => x.TaskTitle).ToArray();
+            model.id = db.CustomLists.Where(x => x.UserID == userId).Select(x => x.UserID).ToArray();
+            model.PK = db.CustomLists.Where(x => x.UserID == userId).Select(x => x.PK).ToArray();
+
+            //JS for opening calendar
+            model.EventsOrNah = await AmountOfEvents();
+
+            //UserName
+            model.UserName = db.AspNetUsers.Where(x => x.Id == userId).Select(x => x.UserName).FirstOrDefault();
+
             return model;
         }
 
+        #endregion GetCurrentEventsTask()
+
+        #region Add Event
+
+        //Add an event
         [HttpPost]
-        public async Task<ActionResult> AddEvent(string EventSummary, string EventLocation, string EventDescription, string EventStartDate, string EventStartTime, string EventEndDate, string EventEndTime)
+        public async Task<ActionResult> AddEvent(string EventSummary, string EventLocation, string EventDescription, string EventStartDate, string EventStartTime, string EventEndDate, string EventEndTime, string Remind)
         {
+            Model context = new Model();
+            string databaseName = context.Database.Connection.Database;
+
             DateTime EventStartDateTime = Convert.ToDateTime(EventStartDate).Add(TimeSpan.Parse(EventStartTime));
             DateTime EventEndDateTime = Convert.ToDateTime(EventEndDate).Add(TimeSpan.Parse(EventEndTime));
             var credential = await GetCredentialForApiAsync();
@@ -583,7 +643,6 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             {
                 var list = calendarService.CalendarList.List().Execute();
                 var listcnt = list.Items;
-                //var calendar = list.Items.SingleOrDefault(c => c.Summary == CustomCalenderName.Trim());
                 var calendarId = "primary";
 
                 Google.Apis.Calendar.v3.Data.Event calendarEvent = new Google.Apis.Calendar.v3.Data.Event();
@@ -594,55 +653,142 @@ namespace Calendar.ASP.NET.MVC5.Controllers
 
                 calendarEvent.Start = new Google.Apis.Calendar.v3.Data.EventDateTime
                 {
-                    DateTime = EventStartDateTime /*new DateTime(StartDate.Year, StartDate.Month, StartDate.Day, StartDate.Hour, StartDate.Minute, StartDate.Second)*/,
+                    DateTime = EventStartDateTime,
                     TimeZone = "America/Los_Angeles"
                 };
+
+                //Trying to split the time zone indicator
+                calendarEvent.Start.DateTimeRaw = calendarEvent.Start.DateTimeRaw.Replace("Z", "");
                 calendarEvent.End = new Google.Apis.Calendar.v3.Data.EventDateTime
                 {
-                    DateTime = EventEndDateTime /*new DateTime(EndDate.Year, EndDate.Month, EndDate.Day, EndDate.Hour, EndDate.Minute, EndDate.Second)*/,
+                    DateTime = EventEndDateTime,
                     TimeZone = "America/Los_Angeles"
                 };
+                calendarEvent.End.DateTimeRaw = calendarEvent.End.DateTimeRaw.Replace("Z", "");
                 calendarEvent.Recurrence = new List<string>();
-
+                if (Remind == "none")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false
+                    };
+                }
+                else if (Remind == "atTime")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 0 }
+                            }
+                    };
+                }
+                else if (Remind == "5Mins")
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 5 }
+                            }
+                    };
+                else if (Remind == "10Mins")
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 10 }
+                            }
+                    };
+                else if (Remind == "30Mins")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 30 }
+                            }
+                    };
+                }
+                else if (Remind == "oneHour")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 60 }
+                            }
+                    };
+                }
+                else if (Remind == "twoHours")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 120}
+                            }
+                    };
+                }
+                else if (Remind == "oneDay")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 1440 }
+                            }
+                    };
+                }
+                else if (Remind == "twoDays")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 2880 }
+                            }
+                    };
+                }
+                else if (Remind == "oneWeek")
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false,
+                        Overrides = new Google.Apis.Calendar.v3.Data.EventReminder[]
+                            {
+                                new Google.Apis.Calendar.v3.Data.EventReminder() { Method = "email", Minutes = 10080 }
+                            }
+                    };
+                }
+                else
+                {
+                    calendarEvent.Reminders = new Google.Apis.Calendar.v3.Data.Event.RemindersData
+                    {
+                        UseDefault = false
+                    };
+                }
                 var newEventRequest = calendarService.Events.Insert(calendarEvent, calendarId);
                 var eventResult = newEventRequest.Execute();
             }
+
             UpcomingEventsViewModel model = await GetCurrentEventsTask();
             return View("UpcomingEvents", model);
         }
 
-        public string[] CountingTasks(string[] tasks)
-        {
-            int amountTask = 0;
-            if (tasks != null)
-            {
-                foreach (var item in tasks)
-                {
-                    if (item == "needsAction")
-                    {
-                        amountTask++;
-                    }
-                }
-            }
-
-            string[] taskArr = new string[amountTask];
-            int indexTask = 0;
-            if (tasks != null)
-            {
-                for (int i = 0; i < tasks.Length; i++)
-                {
-                    if (tasks[i] == "needsAction")
-                    {
-                        taskArr[indexTask] = tasks[i];
-                        indexTask++;
-                    }
-                }
-            }
-
-            return (taskArr);
-        }
+        #endregion Add Event
 
         //function to make sure there are no null events in the list
+
+        #region CheckEvents()
+
         public bool CheckEvents(List<string> events)
         {
             foreach (string item in events)
@@ -658,5 +804,233 @@ namespace Calendar.ASP.NET.MVC5.Controllers
             }
             return false;
         }
+
+        #endregion CheckEvents()
+
+        //Adding Custom Tasks
+
+        #region AddCustomTasks()
+
+        [HttpGet]
+        public async Task<ActionResult> AddCustomTasks()
+        {
+            var userId = User.Identity.GetUserId();
+            string[] tasksCustom = db.CustomLists.Where(x => x.UserID == userId).Select(x => x.TaskTitle).ToArray();
+
+            var credential = await GetCredentialForApiAsync();
+            var initializer3 = new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "MetaHealth",
+            };
+            var service3 = new TasksService(initializer3);
+
+            for (int i = 0; i < tasksCustom.Length; i++)
+            {
+                Google.Apis.Tasks.v1.Data.Task task = new Google.Apis.Tasks.v1.Data.Task { Title = tasksCustom[i] };
+                service3.Tasks.Insert(task, "@default").Execute();
+            }
+
+            Google.Apis.Tasks.v1.Data.Tasks tasks = service3.Tasks.List("@default").Execute();
+            int amountTask = 0;
+            if (tasks.Items != null)
+            {
+                foreach (var item in tasks.Items)
+                {
+                    if (item.Status == "needsAction")
+                    {
+                        amountTask++;
+                    }
+                }
+            }
+
+            string[,] taskArr = new string[2, amountTask];
+            int indexTask = 0;
+
+            if (tasks.Items != null)
+            {
+                for (int i = 0; i < tasks.Items.Count; i++)
+                {
+                    if (tasks.Items[i].Status == "needsAction" && tasks.Items[i].Title != " ")
+                    {
+                        taskArr[1, indexTask] = tasks.Items[i].Title;
+                        taskArr[0, indexTask] = tasks.Items[i].Id;
+                        indexTask++;
+                    }
+                }
+            }
+
+            var json = JsonConvert.SerializeObject(taskArr);
+
+            return Content(json);
+        }
+
+        #endregion AddCustomTasks()
+
+        #region AmountOfEvents()
+
+        public async Task<bool> AmountOfEvents()
+        {
+            var credential = await GetCredentialForApiAsync();
+
+            var initializer = new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "MetaHealth",
+            };
+            var service = new CalendarService(initializer);
+
+            // Fetch the list of calendars.
+            var calendars = await service.CalendarList.List().ExecuteAsync();
+
+            // Fetch some events from each calendar.
+            var fetchTasks = new List<Task<Google.Apis.Calendar.v3.Data.Events>>(calendars.Items.Count);
+            foreach (var calendar in calendars.Items)
+            {
+                var request = service.Events.List(calendar.Id);
+                request.MaxResults = 2;
+                request.SingleEvents = true;
+                request.TimeMin = DateTime.Now;
+                fetchTasks.Add(request.ExecuteAsync());
+            }
+            var fetchResults = await Task.WhenAll(fetchTasks);
+
+            if (fetchResults.Length > 1)
+            {
+                return true;
+            }
+            else return false;
+        }
+
+        #endregion AmountOfEvents()
+
+        #region Create/Editing custom tasks
+
+        [HttpPost]
+        public ActionResult CreateCustom(string titleCustom)
+        {
+            CustomListsController controller = new CustomListsController();
+            CustomList entry = new CustomList();
+            entry.TaskTitle = titleCustom;
+            string userID = User.Identity.GetUserId();
+            entry.UserID = userID;
+            controller.Create(entry);
+
+            CustomList[] arr = db.CustomLists.Where(x => x.UserID == userID).ToArray();
+            CustomList obj = arr[arr.Length - 1];
+            int pk = obj.PK;
+            string task = obj.TaskTitle;
+            var result = new { PK = pk, title = task };
+
+            return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public ActionResult EditCustom(string customTaskContent, string task)
+        {
+            CustomListsController controller = new CustomListsController();
+            CustomList entry = new CustomList();
+            entry.PK = Int32.Parse(customTaskContent);
+            entry.TaskTitle = task;
+            entry.UserID = User.Identity.GetUserId();
+            controller.Edit(entry);
+
+            return Content("");
+        }
+
+        public ActionResult DeleteCustom(string customTaskContent)
+        {
+            CustomListsController controller = new CustomListsController();
+            int key = Int32.Parse(customTaskContent);
+            controller.DeleteConfirmed(key);
+            return Content("");
+        }
+
+        #endregion Create/Editing custom tasks
+
+        //Adding daily suggestion to tasks
+
+        #region DailySugg()
+
+        [HttpPost]
+        public async Task<ActionResult> DailySugg(string sugg)
+        {
+            var credential1 = await GetCredentialForApiAsync();
+
+            //Add a new task
+            var initializer3 = new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential1,
+                ApplicationName = "MetaHealth",
+            };
+            var service1 = new TasksService(initializer3);
+
+            Google.Apis.Tasks.v1.Data.Tasks tasks = service1.Tasks.List("@default").Execute();
+
+            Google.Apis.Tasks.v1.Data.Task task = new Google.Apis.Tasks.v1.Data.Task { Title = sugg };
+
+            Google.Apis.Tasks.v1.Data.Task newTask = service1.Tasks.Insert(task, "@default").Execute();
+
+            var credential = await GetCredentialForApiAsync();
+
+            var initializer = new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "MetaHealth",
+            };
+            var service = new TasksService(initializer);
+
+            // Define parameters of request.
+            TasklistsResource.ListRequest listRequest = service.Tasklists.List();
+            listRequest.MaxResults = 10;
+
+            string[] listOtasks = new string[10];
+            // List task lists.
+            IList<TaskList> taskLists = listRequest.Execute().Items;
+            if (taskLists != null)
+            {
+                int i = 0;
+                foreach (var taskList in taskLists)
+                {
+                    listOtasks[i] = taskList.Title;
+                    i++;
+                }
+            }
+
+            Google.Apis.Tasks.v1.Data.Tasks tasks1 = service.Tasks.List("@default").Execute();
+            int amountTask = 0;
+            if (tasks1.Items != null)
+            {
+                foreach (var item in tasks1.Items)
+                {
+                    if (item.Status == "needsAction")
+                    {
+                        amountTask++;
+                    }
+                }
+            }
+
+            string[,] taskArr = new string[2, amountTask];
+            int indexTask = 0;
+
+            if (tasks1.Items != null)
+            {
+                for (int i = 0; i < tasks1.Items.Count; i++)
+                {
+                    if (tasks1.Items[i].Status == "needsAction" && tasks1.Items[i].Title != " ")
+                    {
+                        taskArr[1, indexTask] = tasks1.Items[i].Title;
+                        taskArr[0, indexTask] = tasks1.Items[i].Id;
+                        indexTask++;
+                    }
+                }
+            }
+
+            var json = JsonConvert.SerializeObject(taskArr);
+
+            return Content(json);
+        }
+
+        #endregion DailySugg()
     }
 }

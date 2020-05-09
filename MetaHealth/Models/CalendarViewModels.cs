@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Google.Apis.Auth.OAuth2;
 using MetaHealth.Models;
 
-namespace Calendar.ASP.NET.MVC5.Models {
-    /// <summary>
-    /// A view model for the UpcomingEvents view.
-    /// </summary>
-    public class UpcomingEventsViewModel {
+namespace Calendar.ASP.NET.MVC5.Models
+{
+    public class UpcomingEventsViewModel
+    {
         /// <summary>
         /// Gets or sets a sequence of event groups to display.
         /// </summary>
@@ -26,7 +19,18 @@ namespace Calendar.ASP.NET.MVC5.Models {
         public List<SepMood> SepMood { get; set; }
         public List<DateTime> MoodDate { get; set; }
         public List<int> MoodNum { get; set; }
-        public Dictionary<string,double> MoodDictionary {get;set;}
+        public Dictionary<string, double> MoodDictionary { get; set; }
 
-    }
+        public string[] CustomTask { get; set; }
+        public string[] id { get; set; }
+        public int[] PK { get; set; }
+
+        public bool EventsOrNah { get; set; }
+        
+        public string UserName { get; set; }
+
+        public string DailyTask { get; set; }
+
+        
+}
 }
