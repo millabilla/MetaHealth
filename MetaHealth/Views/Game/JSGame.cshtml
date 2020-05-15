@@ -1,0 +1,38 @@
+﻿@{
+    ViewBag.Title = "JSGame";
+}
+
+<html>
+<head>
+    <title>Game Time</title>
+    <link rel="stylesheet" href="~/Content/GameSheet.css" type="text/css" />
+    <script type="text/javascript" src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/JSGame.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.2.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div id="content" style="text-align: center">
+        <br />
+        <br />
+        <div id="board">
+            <div id="boardDetails">
+                <script type="text/javascript">
+                    for (var y = NUMBER_ROWS - 1; y > -1; y--) {
+                        for (var x = 0; x < NUMBER_COLS; x++) {
+                            document.write("<img id=\"slot" + x + "x" + y + "\" width=\"30px\" height=\"30px\"  style=\"backgroundColor: white\" />");
+                        }
+                        document.write("<br />")
+                    }
+                </script>
+                <div class="centered" id="finished">You Finished!</div>
+            </div>
+        </div>
+        <br />
+        <div>
+            <div>
+                <button class="MarkDownButtons" onclick="restartGame()">New Game</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
