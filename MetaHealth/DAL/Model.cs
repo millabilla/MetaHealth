@@ -6,9 +6,9 @@ namespace MetaHealth.DAL
     public partial class Model : DbContext
     {
         public Model()
-         //: base("AzureDB")
+         : base("AzureDB")
          //: base("HelpAlong")
-         : base("helpalong")
+         //: base("helpalong")
         { 
         }
 
